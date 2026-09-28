@@ -383,6 +383,20 @@ test("all four presets switch model and thinking without replacing Pi's default 
 	}
 });
 
+test("inside an Oracle or Task child, Pi Dial registers nothing", () => {
+	const oldDialChild = process.env.PI_DIAL_CHILD;
+	process.env.PI_DIAL_CHILD = "1";
+	try {
+		const registered: string[] = [];
+		const api = new Proxy({}, { get: (_target, name) => () => { registered.push(String(name)); } }) as unknown as ExtensionAPI;
+		piDialExtension(api);
+		assert.deepEqual(registered, []);
+	} finally {
+		if (oldDialChild === undefined) delete process.env.PI_DIAL_CHILD;
+		else process.env.PI_DIAL_CHILD = oldDialChild;
+	}
+});
+
 test("Pi Dial registers Wut and its observer reads the active session without changing the dial", async () => {
 	const cwd = mkdtempSync(join(tmpdir(), "pi-dial-wut-"));
 	const oldAgentDir = process.env.PI_CODING_AGENT_DIR;
@@ -695,7 +709,7 @@ test("status identifies the loaded build and distinguishes config reload from Pi
 		const dial = harness.commands.get("dial");
 		assert.ok(dial);
 		await dial.handler("status", harness.ctx);
-		assert.match(harness.notifications.at(-1)?.message ?? "", /Pi Dial v0\.1\.0 is inactive/);
+		assert.match(harness.notifications.at(-1)?.message ?? "", /Pi Dial v0\.1\.1 is inactive/);
 		assert.match(harness.notifications.at(-1)?.message ?? "", /Pi's \/reload/);
 
 		await dial.handler("reload", harness.ctx);

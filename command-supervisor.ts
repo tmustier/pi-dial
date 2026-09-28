@@ -316,6 +316,8 @@ export function createCommandSupervisor(
 				delete env.PI_PROVIDER;
 				delete env.PI_MODEL;
 				delete env.PI_REASONING_LEVEL;
+				// A worker's own commands, such as a nested `pi`, should load Pi Dial normally.
+				delete env.PI_DIAL_CHILD;
 				env.PI_SESSION_ID = ctx.sessionManager.getSessionId();
 				const sessionFile = ctx.sessionManager.getSessionFile();
 				if (sessionFile) env.PI_SESSION_FILE = sessionFile;

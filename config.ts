@@ -21,6 +21,8 @@ export interface ChildAgentConfig {
 	skillPaths?: string[];
 	inheritContext?: boolean;
 	inheritSkills?: boolean;
+	/** Load the user's installed extensions in the child. Pi Dial itself stays inactive there. */
+	inheritExtensions?: boolean;
 	commandReviewMs?: number;
 	outputLimitChars?: number;
 	maxContextChars?: number;
@@ -227,6 +229,7 @@ const SHARED_CHILD_KEYS = [
 	"skillPaths",
 	"inheritContext",
 	"inheritSkills",
+	"inheritExtensions",
 	"outputLimitChars",
 ];
 const ORACLE_CHILD_KEYS = new Set([...SHARED_CHILD_KEYS, "maxContextChars"]);
@@ -559,6 +562,9 @@ function mergeChildConfig(
 	}
 	if (value.inheritSkills !== undefined) {
 		next.inheritSkills = readBoolean(value.inheritSkills, `${location}.inheritSkills`);
+	}
+	if (value.inheritExtensions !== undefined) {
+		next.inheritExtensions = readBoolean(value.inheritExtensions, `${location}.inheritExtensions`);
 	}
 	for (const key of ["commandReviewMs", "outputLimitChars", "maxContextChars"] as const) {
 		if (value[key] === undefined) continue;

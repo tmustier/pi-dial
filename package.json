@@ -1,6 +1,6 @@
 {
   "name": "@tmustier/pi-dial",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Configurable four-position model, reasoning, Oracle, and Task dial for Pi.",
   "license": "MIT",
   "author": "Thomas Mustier",

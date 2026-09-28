@@ -38,6 +38,7 @@ function request(script: string, overrides: Partial<ChildRunRequest> = {}): Chil
 		skillPaths: [],
 		inheritContext: false,
 		inheritSkills: false,
+		inheritExtensions: false,
 		commandReviewMs: 2_000,
 		outputLimitChars: 1_000,
 		artifactsBaseDir: join(dirname(script), "runs"),
@@ -150,6 +151,24 @@ test("child runner extracts the final assistant message from Pi JSON mode", asyn
 		rmSync(dir, { recursive: true, force: true });
 	}
 });
+test("children load installed extensions unless disabled, and mark themselves for Pi Dial", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-dial-child-"));
+	try {
+		const script = join(dir, "fake-pi.mjs");
+		writeFileSync(
+			script,
+			`process.stdout.write(JSON.stringify({type:"message_end",message:{role:"assistant",content:[{type:"text",text:JSON.stringify({args:process.argv.slice(2),child:process.env.PI_DIAL_CHILD})}],stopReason:"stop"}})+"\\n");`,
+		);
+		const inherited = JSON.parse((await runChildAgent(request(script, { inheritExtensions: true }))).text);
+		assert.ok(!inherited.args.includes("--no-extensions"));
+		assert.equal(inherited.child, "1");
+		const isolated = JSON.parse((await runChildAgent(request(script, { inheritExtensions: false }))).text);
+		assert.ok(isolated.args.includes("--no-extensions"));
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
 test("the command review interval is not a whole-worker deadline", async () => {
 	const dir = mkdtempSync(join(tmpdir(), "pi-dial-child-"));
 	try {

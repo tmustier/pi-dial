@@ -231,11 +231,16 @@ propagates to running workers. Cancelling an individual Bash review wait or
 `command_session wait` only cancels that wait; use `command_session abort` to stop the command
 explicitly.
 
-Children start with ambient extensions disabled to prevent recursive loading of Pi Dial. Task
-workers with Bash enabled load Pi Dial's command supervisor first, so it owns `bash` and
-`command_session`; explicitly configured extensions load alongside it. Project context files and skills remain enabled by default. Configure child
-`extensionPaths`, `skillPaths`, `inheritContext`, and `inheritSkills` explicitly when a worker needs
-a different surface.
+Children load your installed extensions, like a normal Pi session, so provider and request hooks
+such as authentication or request rewriting also apply to Oracle and Task calls. Pi Dial itself
+stays inactive inside a child: every child runs with `PI_DIAL_CHILD=1`, which the command
+supervisor removes again from the worker's own Bash commands. A child's active tools are still
+limited to its configured `tools`. Task workers with Bash enabled load Pi Dial's command supervisor
+first, so it owns `bash` and `command_session`; explicitly configured extensions load alongside it.
+Project context files and skills remain enabled by default, and project extensions load only where
+Pi has a saved project-trust decision. Set `inheritExtensions` to `false` to start a child without
+your installed extensions. Configure child `extensionPaths`, `skillPaths`, `inheritContext`,
+`inheritSkills`, and `inheritExtensions` explicitly when a worker needs a different surface.
 
 ## Run forensics
 
@@ -339,6 +344,7 @@ Example opt-in configuration:
         "tools": ["read", "bash", "grep", "find", "ls"],
         "inheritContext": true,
         "inheritSkills": true,
+        "inheritExtensions": true,
         "outputLimitChars": 50000,
         "maxContextChars": 120000
       },
@@ -351,6 +357,7 @@ Example opt-in configuration:
         "skillPaths": [],
         "inheritContext": true,
         "inheritSkills": true,
+        "inheritExtensions": true,
         "commandReviewMs": 120000,
         "outputLimitChars": 50000
       }

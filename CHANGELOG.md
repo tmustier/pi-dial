@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.1] - 2026-09-28
+
+### Fixed
+
+- Oracle and Task children now load your installed extensions instead of starting with none, so provider and request hooks, such as Anthropic OAuth request rewriting, also apply to child model calls. Pi Dial stays inactive inside its own children. Set `inheritExtensions: false` on a child to restore the previous isolation.
+
 ## [0.1.0] - 2026-09-28
 
 First public release.

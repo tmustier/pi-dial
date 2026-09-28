@@ -60,6 +60,8 @@ test("long commands return control and can be inspected and waited for without r
 		},
 	};
 
+	const oldDialChild = process.env.PI_DIAL_CHILD;
+	process.env.PI_DIAL_CHILD = "1";
 	try {
 		const supervisor = createCommandSupervisor(operations, 20, dir, "export SUPERVISED=1");
 		const started = await supervisor.bash.execute("bash-1", { command: "npm test" }, undefined, undefined, context);
@@ -93,10 +95,13 @@ test("long commands return control and can be inspected and waited for without r
 		assert.equal(executedEnvironment?.PI_PROVIDER, "test-provider");
 		assert.equal(executedEnvironment?.PI_MODEL, "test-model");
 		assert.equal(executedEnvironment?.PI_REASONING_LEVEL, "medium");
+		assert.equal(executedEnvironment?.PI_DIAL_CHILD, undefined);
 		const pathKey = Object.keys(executedEnvironment ?? {}).find((key) => key.toLowerCase() === "path") ?? "PATH";
 		assert.ok(executedEnvironment?.[pathKey]?.split(delimiter).includes(join(getAgentDir(), "bin")));
 		assert.equal(readFileSync(join(dir, `${id}.log`), "utf8"), "build started\n");
 	} finally {
+		if (oldDialChild === undefined) delete process.env.PI_DIAL_CHILD;
+		else process.env.PI_DIAL_CHILD = oldDialChild;
 		rmSync(dir, { recursive: true, force: true });
 	}
 });

@@ -6,6 +6,7 @@ import { clampThinkingLevel, StringEnum, Type, type Api, type Model } from "@ear
 import { getAgentDir, type ExtensionAPI, type ExtensionContext, type SessionEntry } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 import {
+	DIAL_CHILD_ENV,
 	runChildAgent,
 	type ChildRunProgress,
 	type ChildRunRequest,
@@ -34,7 +35,7 @@ import { buildOracleInput, buildTaskInput, serializeParentThread } from "./promp
 import wutExtension from "./wut.ts";
 
 const EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
-const PI_DIAL_VERSION = "0.1.0";
+const PI_DIAL_VERSION = "0.1.1";
 const STATE_ENTRY = "pi-dial-state";
 const STATUS_KEY = "pi-dial";
 const STATE_VERSION = 1;
@@ -64,6 +65,7 @@ interface ChildWorkerTemplate {
 	skillPaths: string[];
 	inheritContext: boolean;
 	inheritSkills: boolean;
+	inheritExtensions: boolean;
 	commandReviewMs: number;
 	outputLimitChars: number;
 }
@@ -179,6 +181,7 @@ function childTemplate(
 		skillPaths: [...(child.skillPaths ?? [])],
 		inheritContext: child.inheritContext ?? true,
 		inheritSkills: child.inheritSkills ?? true,
+		inheritExtensions: child.inheritExtensions ?? true,
 		commandReviewMs: child.commandReviewMs ?? DEFAULT_COMMAND_REVIEW_MS,
 		outputLimitChars: child.outputLimitChars ?? DEFAULT_OUTPUT_LIMIT_CHARS,
 	};
@@ -203,6 +206,7 @@ function inactiveChildTemplate(
 		skillPaths: [...(child.skillPaths ?? [])],
 		inheritContext: child.inheritContext ?? true,
 		inheritSkills: child.inheritSkills ?? true,
+		inheritExtensions: child.inheritExtensions ?? true,
 		commandReviewMs: child.commandReviewMs ?? DEFAULT_COMMAND_REVIEW_MS,
 		outputLimitChars: child.outputLimitChars ?? DEFAULT_OUTPUT_LIMIT_CHARS,
 	};
@@ -342,6 +346,8 @@ function projectConfigPath(cwd: string): string {
 }
 
 export default function piDialExtension(pi: ExtensionAPI, collaborationDependencies: Omit<CollaborationDependencies, "enabled"> = {}): void {
+	// Oracle and Task children load the user's extensions, including this one; stay inactive there.
+	if (process.env[DIAL_CHILD_ENV] === "1") return;
 	wutExtension(pi);
 	let config = createDefaultConfig(EXTENSION_DIR);
 	let configError: string | undefined;
@@ -816,6 +822,7 @@ export default function piDialExtension(pi: ExtensionAPI, collaborationDependenc
 					skillPaths: settings.skillPaths,
 					inheritContext: settings.inheritContext,
 					inheritSkills: settings.inheritSkills,
+					inheritExtensions: settings.inheritExtensions,
 					commandReviewMs: settings.commandReviewMs,
 					outputLimitChars: settings.outputLimitChars,
 					artifactsBaseDir: runsBaseDir(),
@@ -965,6 +972,7 @@ export default function piDialExtension(pi: ExtensionAPI, collaborationDependenc
 							skillPaths: settings.skillPaths,
 							inheritContext: settings.inheritContext,
 							inheritSkills: settings.inheritSkills,
+							inheritExtensions: settings.inheritExtensions,
 							commandReviewMs: settings.commandReviewMs,
 							outputLimitChars: settings.outputLimitChars,
 							artifactsBaseDir: runsBaseDir(),

@@ -64,6 +64,7 @@ export interface ChildRunRequest {
 	skillPaths: string[];
 	inheritContext: boolean;
 	inheritSkills: boolean;
+	inheritExtensions: boolean;
 	commandReviewMs: number;
 	outputLimitChars: number;
 	artifactsBaseDir: string;
@@ -105,6 +106,8 @@ const COMMAND_SUPERVISOR_EXTENSION = join(dirname(fileURLToPath(import.meta.url)
 const CACHE_KEY_ENV = "PI_DIAL_PROMPT_CACHE_KEY";
 const COMMAND_REVIEW_ENV = "PI_DIAL_COMMAND_REVIEW_MS";
 const RUN_DIR_ENV = "PI_DIAL_RUN_DIR";
+/** Set in every child so an installed Pi Dial loads as a no-op instead of recursing. */
+export const DIAL_CHILD_ENV = "PI_DIAL_CHILD";
 const DEFAULT_TERMINATION_GRACE_MS = 2_000;
 const DEFAULT_TERMINATION_SETTLE_MS = 1_000;
 
@@ -122,6 +125,7 @@ export function childPromptCacheKey(request: ChildRunRequest): string {
 		skillPaths: request.skillPaths,
 		inheritContext: request.inheritContext,
 		inheritSkills: request.inheritSkills,
+		inheritExtensions: request.inheritExtensions,
 		...(request.tools.includes("bash") ? { commandReviewMs: request.commandReviewMs } : {}),
 	});
 	const digest = createHash("sha256").update(staticConfiguration).digest("hex").slice(0, 32);
@@ -362,7 +366,6 @@ export async function runChildAgent(request: ChildRunRequest, signal?: AbortSign
 			"--print",
 			"--session",
 			artifacts.sessionPath,
-			"--no-extensions",
 			"--no-prompt-templates",
 			"--no-themes",
 			"--model",
@@ -373,6 +376,7 @@ export async function runChildAgent(request: ChildRunRequest, signal?: AbortSign
 		if (request.appendSystemPrompt) args.push("--append-system-prompt", request.appendSystemPrompt);
 		if (!request.inheritContext) args.push("--no-context-files");
 		if (!request.inheritSkills) args.push("--no-skills");
+		if (!request.inheritExtensions) args.push("--no-extensions");
 		if (activeTools.length === 0) args.push("--no-tools");
 		else args.push("--tools", activeTools.join(","));
 		args.push("--extension", CACHE_AFFINITY_EXTENSION);
@@ -390,6 +394,7 @@ export async function runChildAgent(request: ChildRunRequest, signal?: AbortSign
 				[CACHE_KEY_ENV]: childPromptCacheKey(request),
 				[COMMAND_REVIEW_ENV]: String(request.commandReviewMs),
 				[RUN_DIR_ENV]: artifacts.dir,
+				[DIAL_CHILD_ENV]: "1",
 			},
 			shell: false,
 			stdio: ["ignore", "pipe", "pipe"],
