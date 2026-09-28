@@ -416,7 +416,10 @@ export default function commandSupervisorExtension(pi: ExtensionAPI): void {
 		logDir,
 		settings.getShellCommandPrefix(),
 	);
-	pi.registerTool(supervisor.bash);
+	// Installed extensions may also override `bash`. Pi rejects duplicate tools found while loading
+	// in print mode, so register ours once the session starts. This extension loads first, so its
+	// `bash` still takes precedence.
+	pi.on("session_start", () => pi.registerTool(supervisor.bash));
 	pi.registerTool(supervisor.commandSession);
 	let terminating = false;
 	const onTerminationSignal = (): void => {

@@ -3,7 +3,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import test from "node:test";
 import { DEFAULT_MAX_BYTES, getAgentDir, type BashOperations, type ExtensionContext } from "@earendil-works/pi-coding-agent";
 import {
@@ -248,6 +248,33 @@ test(
 	},
 );
 
+test("the supervisor's bash takes precedence over an installed bash override without a load conflict", () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-dial-command-owner-"));
+	try {
+		const probe = join(dir, "bash-owner.json");
+		const otherBash = join(dir, "other-bash.ts");
+		writeFileSync(
+			otherBash,
+			`import { writeFileSync } from "node:fs";
+export default function (pi) {
+	pi.registerTool({ name: "bash", label: "Other", description: "Other bash", parameters: { type: "object", properties: {} }, execute: async () => ({ content: [], details: undefined }) });
+	pi.on("session_start", () => writeFileSync(${JSON.stringify(probe)}, JSON.stringify(pi.getAllTools().find((tool) => tool.name === "bash").sourceInfo.path)));
+}
+`,
+		);
+		const cli = fileURLToPath(new URL("./bundle/cli.js", import.meta.resolve("@earendil-works/pi-coding-agent")));
+		const run = spawnSync(
+			process.execPath,
+			[cli, "--no-extensions", "-e", join(process.cwd(), "command-supervisor.ts"), "-e", otherBash, "--no-session", "--mode", "json", "--print", "--tools", "bash,command_session", "hi"],
+			{ cwd: dir, encoding: "utf8", env: { ...process.env, PI_CODING_AGENT_DIR: join(dir, "agent") }, timeout: 30_000 },
+		);
+		assert.doesNotMatch(run.stderr, /conflicts with/);
+		assert.equal(JSON.parse(readFileSync(probe, "utf8")), join(process.cwd(), "command-supervisor.ts"));
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
 test(
 	"parent SIGTERM aborts a supervised POSIX process group before the worker exits",
 	{ skip: process.platform === "win32" },
@@ -260,7 +287,7 @@ test(
 			fixturePath,
 			`import extension from ${JSON.stringify(extensionUrl)};
 const tools = new Map();
-extension({ registerTool: (tool) => tools.set(tool.name, tool), on: () => {} });
+extension({ registerTool: (tool) => tools.set(tool.name, tool), on: (event, handler) => { if (event === "session_start") handler(); } });
 const context = { cwd: process.cwd(), sessionManager: { getSessionId: () => "signal-test", getSessionFile: () => undefined }, thinkingLevel: "off" };
 await tools.get("bash").execute("bash-1", { command: ${JSON.stringify(`echo $$ > ${pidPath}; sleep 30`)} }, undefined, undefined, context);
 process.stdout.write("READY\\n");

@@ -709,7 +709,7 @@ test("status identifies the loaded build and distinguishes config reload from Pi
 		const dial = harness.commands.get("dial");
 		assert.ok(dial);
 		await dial.handler("status", harness.ctx);
-		assert.match(harness.notifications.at(-1)?.message ?? "", /Pi Dial v0\.1\.1 is inactive/);
+		assert.match(harness.notifications.at(-1)?.message ?? "", /Pi Dial v0\.1\.2 is inactive/);
 		assert.match(harness.notifications.at(-1)?.message ?? "", /Pi's \/reload/);
 
 		await dial.handler("reload", harness.ctx);

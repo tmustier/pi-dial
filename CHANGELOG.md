@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.2] - 2026-09-28
+
+### Fixed
+
+- Bash-enabled Oracle and Task children no longer fail to start when an installed extension also overrides `bash`. Pi Dial's command supervisor registers `bash` once the session starts and keeps precedence, so Pi no longer rejects the duplicate while loading.
+
 ## [0.1.1] - 2026-09-28
 
 ### Fixed

@@ -1,5 +1,13 @@
 # Work log
 
+## 28 September 2026: installed bash overrides no longer break children (0.1.2)
+
+- 0.1.1 broke bash-enabled Oracle and Task runs for users with an extension that overrides `bash`: Pi rejects duplicate tools found while loading in print mode, so the child exited before its first request
+- the command supervisor now registers `bash` at `session_start`; it still loads first, so its `bash` wins, and Pi's load-time conflict check no longer sees a duplicate
+- TypeScript check and 103 tests passed; the new test loads the supervisor and a second `bash` extension through the real Pi CLI and fails against 0.1.1
+- real Pi run with Thomas's full installed extension set and only Pi Dial pointed at this checkout; Medium parent `openai-codex/gpt-6-sol`. An Oracle (`anthropic/claude-fable-5-1`, high) ran `git rev-parse --short HEAD` and a Task (`anthropic/claude-opus-5-5`, medium) ran `node -p` for the package version; both commands went through the supervisor (`cmd-*.log` in each run directory) and both answers were correct
+- the parent event file that went missing in the 0.1.1 run was moved by Pi's first-start migration, which moves `.jsonl` files in a fresh agent directory into `sessions/`
+
 ## 28 September 2026: children load installed extensions (0.1.1)
 
 - Oracle and Task children now load the user's installed extensions instead of starting with `--no-extensions`, so hooks such as the Anthropic OAuth request rewrite apply to child calls; `inheritExtensions: false` restores isolation
@@ -7,7 +15,7 @@
 - TypeScript check and all 102 tests passed at `04f4dbf`; the three new assertions fail against 0.1.0
 - real Pi run at `04f4dbf` with a scratch agent directory holding only `pi-oauth`, this checkout and a probe extension; Medium parent `openai-codex/gpt-6-sol`. A parallel Oracle (`anthropic/claude-fable-5-1`, high) ran `git log -1 --format=%s` and returned the commit subject, and a Task (`anthropic/claude-opus-5-5`, medium) read `package.json` and returned `VERSION=0.1.1`
 - the probe showed both children with `PI_DIAL_CHILD=1`, no `oracle` or `Task` tools, and Anthropic requests whose `system` held only the Claude Code block with the Pi prompt moved into a leading `<system-reminder>` user message, so `pi-oauth` rewrote them
-- the first run's parent event file was missing afterwards; two further runs kept theirs and the cause was not found. Not run: the installed npm package path, colleagues' extension sets, Windows
+- Not run: the installed npm package path, colleagues' extension sets, Windows
 
 ## 28 September 2026: 0.1.0 public release preparation
 

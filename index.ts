@@ -35,7 +35,7 @@ import { buildOracleInput, buildTaskInput, serializeParentThread } from "./promp
 import wutExtension from "./wut.ts";
 
 const EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
-const PI_DIAL_VERSION = "0.1.1";
+const PI_DIAL_VERSION = "0.1.2";
 const STATE_ENTRY = "pi-dial-state";
 const STATUS_KEY = "pi-dial";
 const STATE_VERSION = 1;
