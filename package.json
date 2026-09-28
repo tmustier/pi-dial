@@ -1,0 +1,55 @@
+{
+  "name": "@tmustier/pi-dial",
+  "version": "0.1.0",
+  "description": "Configurable four-position model, reasoning, Oracle, and Task dial for Pi.",
+  "license": "MIT",
+  "author": "Thomas Mustier",
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "agent-mode",
+    "subagent"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tmustier/pi-dial.git"
+  },
+  "bugs": "https://github.com/tmustier/pi-dial/issues",
+  "homepage": "https://github.com/tmustier/pi-dial#readme",
+  "type": "module",
+  "files": [
+    "*.ts",
+    "docs/*.md",
+    "prompts/*.md",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "pi": {
+    "extensions": [
+      "index.ts"
+    ]
+  },
+  "scripts": {
+    "check": "tsc -p tsconfig.json",
+    "test": "node --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@earendil-works/pi-ai": "0.87.0"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-agent-core": ">=0.87.0",
+    "@earendil-works/pi-coding-agent": ">=0.87.0",
+    "@earendil-works/pi-tui": ">=0.87.0"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-agent-core": "0.87.0",
+    "@earendil-works/pi-coding-agent": "0.87.0",
+    "@earendil-works/pi-tui": "0.87.0",
+    "@types/node": "26.1.1",
+    "typescript": "6.0.3"
+  }
+}
